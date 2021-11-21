@@ -37,24 +37,38 @@ def get_text(text, args):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--lj_url", "-u", required=True)
+    parser.add_argument("--lj_url", "-u", required=True, nargs="+")
     parser.add_argument("--output", "-o", help="override auto-generated filename")
-    parser.add_argument("--only_root", "-or", action="store_true", help="leave only root comments, not replies to them.")
-    parser.add_argument("--only_author", "-oa", help="leave only comments by specified author")
-    parser.add_argument("--download_images", "-di", action="store_true", help="download linked images from comments")
+    parser.add_argument(
+        "--only_root",
+        "-or",
+        action="store_true",
+        help="leave only root comments, not replies to them.",
+    )
+    parser.add_argument(
+        "--only_author", "-oa", help="leave only comments by specified author"
+    )
+    parser.add_argument(
+        "--download_images",
+        "-di",
+        action="store_true",
+        help="download linked images from comments",
+    )
     args = parser.parse_args()
 
-    req = requests.get(args.lj_url)
-    page = re.search("Site.page = (.+?);\n", req.text).group(1)
-    page = json.loads(page)
+    texts = []
+    for url in args.lj_url:
+        req = requests.get(url)
+        page = re.search("Site.page = (.+?);\n", req.text).group(1)
+        page = json.loads(page)
 
-    comments = page["comments"]
-    if args.only_root:
-        comments = [x for x in comments if not x["below"] and x["article"]]
-    if args.only_author:
-        comments = [x for x in comments if x["uname"] == args.only_author]
-    texts = [get_text(x["article"], args) for x in comments]
-    output_file_name = args.output or generate_name(args.lj_url, ext=".txt")
+        comments = page["comments"]
+        if args.only_root:
+            comments = [x for x in comments if not x["below"] and x["article"]]
+        if args.only_author:
+            comments = [x for x in comments if x["uname"] == args.only_author]
+        texts.extend([get_text(x["article"], args) for x in comments])
+    output_file_name = args.output or generate_name(args.lj_url[0], ext=".txt")
     with open(output_file_name, "w", encoding="utf8") as f:
         f.write("\n\n".join(texts))
 
