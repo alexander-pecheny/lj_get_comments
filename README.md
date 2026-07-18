@@ -1,3 +1,5 @@
+> **The main repository of this project lives at https://code.pecheny.me/pecheny/lj_get_comments. All issues should be created there.**
+
 # LJ Get Comments
 
 An utility to download comments from a Livejournal page programmatically.
